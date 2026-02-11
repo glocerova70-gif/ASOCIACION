@@ -3,12 +3,11 @@ import { GoogleGenAI } from "@google/genai";
 import { SYSTEM_PROMPT } from "../constants";
 
 /**
- * IMPORTANTE PARA VERCEL:
- * Para que el asistente funcione, debes agregar tu clave API en el panel de Vercel:
- * Nombre: API_KEY
- * Valor: AIzaSyC1EBVgkBYjikPMO6_PS_fiXKdJZwqjZ4s
+ * CONFIGURACIÓN DE CLAVE API (Autorizada por el usuario)
+ * Esta clave se usa directamente para evitar errores de entorno en el cliente.
  */
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const API_KEY_ALFADES = "AIzaSyC1EBVgkBYjikPMO6_PS_fiXKdJZwqjZ4s";
+const ai = new GoogleGenAI({ apiKey: API_KEY_ALFADES });
 
 export const getChatResponse = async (userMessage: string, history: any[] = []) => {
   try {
@@ -21,16 +20,20 @@ export const getChatResponse = async (userMessage: string, history: any[] = []) 
       },
     });
 
-    // Se utiliza la propiedad .text directamente como especifica la documentación actual
-    return response.text || "Lo siento, tuve un problema procesando tu solicitud. Por favor intenta de nuevo.";
-  } catch (error: any) {
-    console.error("Gemini API Error:", error);
+    // La propiedad .text extrae el contenido generado por la IA
+    if (response && response.text) {
+      return response.text;
+    }
     
-    // Respuesta amigable en caso de que la clave no esté configurada en el entorno
-    if (!process.env.API_KEY) {
-      return "El asistente virtual de ALFADES requiere configuración. Por favor, asegúrese de haber configurado la API_KEY en las variables de entorno.";
+    return "Lo siento, recibí una respuesta vacía. ¿Podrías intentar reformular tu pregunta?";
+  } catch (error: any) {
+    console.error("Error en el Asistente ALFADES:", error);
+    
+    // Manejo de errores específicos para retroalimentación profesional
+    if (error.message?.includes("API_KEY_INVALID")) {
+      return "Error de configuración: La clave de acceso a la IA no es válida.";
     }
 
-    return "En este momento no puedo responder. Por favor contacta a ALFADES directamente por correo.";
+    return "Hola, en este momento el asistente tiene mucha demanda. Si necesitas ayuda urgente, escríbenos a jhongutierrez1011@gmail.com";
   }
 };
